@@ -3522,8 +3522,12 @@ class MySQLImpl(PostgresImpl):
         # TODO: Retrieve server, username, password from TACTIC config file.
         # eg.   mysql --host=localhost --port=5432 --user=root --password=south123paw --execute="create database unittest"
         drop_SQL_arg = 'DROP DATABASE %s' % database.get_database()
-        create = 'mysql --host=%s --port=%s --user=%s --password=%s --execute="%s"' % \
-                 (self.server, self.port, self.user, self.password, drop_SQL_arg)
+        if self.password == 'none':
+            create = 'mysql --host=%s --port=%s --user=%s --execute="%s"' % \
+                (self.server, self.port, self.user, drop_SQL_arg)
+        else:
+            create = 'mysql --host=%s --port=%s --user=%s --password=%s --execute="%s"' % \
+                (self.server, self.port, self.user, self.password, drop_SQL_arg)
         cmd = os.popen(create)
         result = cmd.readlines()
         if not result:
