@@ -3184,17 +3184,25 @@ class MySQLImpl(PostgresImpl):
                 value = 0
             return {"value": value, "quoted": quoted}
 
-        elif isinstance(value, datetime.datetime):
-            value_str = str(value)
-            if value_str.find("+") == -1:
-                return {"value": value_str, "quoted": True}
-            if value_str.endswith("+00:00"):
-                parts = value_str.split("+")
-                return {"value": parts[0], "quoted": True}
-            else:
-                parts = datetime.split("+")
-                return {"value": "CONVERT_TZ('%s','00:00','+%s')" % (parts[0], parts[1]), "quoted": False}
+        if (column_type == 'timestamp'):
+            # We are converting a timestamp ISO string to datetime obj.
+            from dateutil import parser
+            try:
+                value = parser.parse(value)
+            except:
+                value = value
 
+        if isinstance(value, datetime.datetime):
+            # We need to convert the time to UTC, and strip the timezone info.
+            if value.tzinfo is not None:
+                # Convert to UTC
+                if value.utcoffset() is not None:
+                    value = value - value.utcoffset()
+            # Strip the timezone info.
+            value = value.replace(tzinfo=None)
+            # We now have a datetime obj without timezone info.
+            value_str = value.strftime("%Y-%m-%d %H:%M:%S")
+            return {"value": value_str, "quoted": True}
 
 
     def get_table_info(self, db_resource):
