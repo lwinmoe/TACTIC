@@ -3092,9 +3092,15 @@ class TableLayoutWdg(BaseTableLayoutWdg):
             try:
                 extra_data = jsonloads(extra_data)
             except:
-                print("WARNING: bad extra_data!!!")
-                print(extra_data)
-                extra_data = {}
+                # try replace single quotes with double quotes ... there was a point
+                # when we just used str instead of json, so this may still occur
+                extra_data = extra_data.replace("'", '"')
+                try:
+                    extra_data = jsonloads(extra_data)
+                except:
+                    print("WARNING: bad extra_data!!!")
+                    print(extra_data)
+                    extra_data = {}
 
             min_height = extra_data.get("min_height")
             if min_height:
@@ -6895,8 +6901,11 @@ spt.table.save_changes = function(kwargs) {
                 extra_data.push(extra_data_row);
             }
             else {
-                extra_data.push(null);
+                //extra_data.push(null);
             }
+
+            let table_extra_data = layout.getAttribute("spt_extra_data") || "{}";
+            extra_data.push(JSON.parse(table_extra_data));
 
             // get extra action
             var extra_action_row = rows[i].extra_action;
